@@ -2,6 +2,7 @@ from aiogram import F, Dispatcher, Bot
 from aiogram.filters import Command, CommandObject
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.types import Message
+from aiogram import types
 from aiogram.enums import ParseMode
 from aiogram import html
 from aiogram.utils.media_group import MediaGroupBuilder
@@ -15,8 +16,6 @@ from enum import Enum, auto
 from pathlib import Path
 from datetime import datetime
 import random
-
-# TODO: strange behavior when user sends several photos simultaneously
 
 '''
 Simple bot that simulates simple cloud image storage with some basic functionality.
@@ -60,6 +59,32 @@ class UploadStates(Enum):
 
 upload_states = defaultdict(lambda: UploadStates.NOT_STARTED)  # stores UploadStates for users. The keys are chats' ids
 photo_names = defaultdict(str)  # stores photo names for users used while uploading photo. The keys are chats' ids
+
+
+# Handler for command /start
+@dp.message(Command('start'))
+async def start(message: types.Message):
+    await message.answer(
+        html.bold("This is my simple image saver bot!\n\n") +
+        "To show the list of available commands user /help command"
+    )
+
+
+# Handler for command /help
+@dp.message(Command('help'))
+async def help_cmd(message: types.Message):
+    await message.answer(
+        html.quote(
+            "Currently, this bot supports the following commands:\n"
+            "• /upload - upload photo (only photos, no file-format for now, sorry)\n\n"
+            "• /reset - cancel photo uploading\n\n"
+            "• /delete <name-of-photo> - delete photo\n\n"
+            "• /show_names - shows the list of names of all uploaded photos\n\n"
+            "• /show_photo <name-of-photo> - shows a photo with passed name (if such photo exists)\n\n"
+            "• /generate_album - picks several random photos "
+            "from the uploaded ones and creates album of picked photos\n\n") +
+        html.italic("but pretty soon, only buttons will be here...")
+    )
 
 
 # Handler for command /upload
@@ -112,6 +137,11 @@ async def set_name(message):
 
 @dp.message(F.photo, lambda message: upload_states[message.chat.id] == UploadStates.UPLOADING_PHOTO)
 async def upload_photo(message: Message):
+    # For some reason, aiogram handles all photos when user sends media group,
+    # So additional check is required
+    if upload_states[message.chat.id] != UploadStates.UPLOADING_PHOTO:
+        return
+
     # download photo sent by user
     path_to_photo = (storage_path
                      .joinpath(str(message.chat.id))
@@ -123,6 +153,7 @@ async def upload_photo(message: Message):
     # reset some parameters
     upload_states[message.chat.id] = UploadStates.NOT_STARTED
     photo_names[message.chat.id] = str()
+
     await bot.download(
         message.photo[-1],
         destination=str(path_to_photo)
@@ -131,7 +162,7 @@ async def upload_photo(message: Message):
 
 
 @dp.message(Command('show_names'))
-async def show(message: Message):
+async def show_names(message: Message):
     # Show names and dates of all uploaded photos
     # Format: "Name: <photo-name> Created: <creation-date>
 
@@ -146,9 +177,9 @@ async def show(message: Message):
                 f'{html.bold("Here is the list of your photos:")}\n' +
                 '\n'.join(
                     f"{html.bold('Name: ')}"
-                    f"{html.quote(photo.name)} "
-                    f"{html.bold('Time of creation: ')}"
-                    f"{datetime.fromtimestamp(photo.stat().st_mtime)}"
+                    f"{html.quote(photo.name)} | "
+                    f"{html.bold('Time of creation: ')}" +
+                    datetime.fromtimestamp(photo.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
                     for photo in user_photos
                 )
         )
@@ -188,8 +219,8 @@ async def show_photo(message: Message, command: CommandObject):
             photo=FSInputFile(path_to_photo),
             caption=f"{html.bold('Name: ')}"
                     f"{html.quote(path_to_photo.name)} "
-                    f"{html.bold('Time of creation: ')}"
-                    f"{datetime.fromtimestamp(path_to_photo.stat().st_mtime)}"
+                    f"{html.bold('Time of creation: ')}" +
+                    datetime.fromtimestamp(path_to_photo.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
         )
 
 
