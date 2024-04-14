@@ -48,7 +48,7 @@ dp = Dispatcher()
 # all user folders are stored in folder with the name stored in variable storage
 # like image_folder/4519822341/kitten.png
 storage = config['IMAGE_FOLDER_NAME']
-storage_path = Path(__file__).parent.joinpath(storage)
+storage_path = Path(__file__).parent.parent.joinpath(storage)
 
 
 # while uploading photo, the program may be in three states
