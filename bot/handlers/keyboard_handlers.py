@@ -33,6 +33,3 @@ async def cancel_upload(message: types.Message):
         text='Alright, the photo uploading has been cancelled',
         reply_markup=keyboards.get_root_keyboard()
     )
-
-
-
