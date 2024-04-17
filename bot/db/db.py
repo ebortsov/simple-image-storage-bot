@@ -8,6 +8,8 @@ logging.basicConfig(level=logging.DEBUG)
 config = dotenv.dotenv_values()
 images = utils.get_project_root().joinpath(config['IMAGES_FOLDER_NAME'])
 
+# TODO: save file-ids, to decrease the load on Telegram Servers
+
 
 def start_stuff(user_id: int):
     #  Does some preliminary stuff, like creating the folder for the user

@@ -56,3 +56,16 @@ async def delete(message: types.Message):
              'then enter {}'.format(html.italic('"CuteCucumbers"')),
         reply_markup=keyboards.get_delete_keyboard()
     )
+
+
+@router.message(
+    lambda message: message.text == 'Cancel deletion' and
+    states.user_states[message.from_user.id] == states.States.DELETE_PHOTO
+)
+async def delete(message: types.Message):
+    user_id = message.from_user.id
+    states.user_states[user_id] = states.States.MAIN
+    await message.answer(
+        text='Alright, the photo deletion has been cancelled',
+        reply_markup=keyboards.get_root_keyboard()
+    )

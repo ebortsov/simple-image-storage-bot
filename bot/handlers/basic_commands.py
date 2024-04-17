@@ -20,9 +20,11 @@ async def start_cmd(message: types.Message):
     await message.answer(
         html.bold("Welcome to my image saver bot!\n") +
         "With this bot you can:\n"
-        "- Manage your photos\n"
-        "- View your photos\n"
-        "- Create amazing carousel " + html.italic('soon will be available!') + '\n'
-        "And all it is using nice keyboard without any command!",
+        "• Manage your photos\n"
+        "• View your photos\n"
+        "• Create " + html.bold("amazing") + " carousel | " + html.italic('soon will be available!') + '\n'
+        "And all there operations with nice keyboard and smooth interaction",
         reply_markup=keyboards.get_root_keyboard()
     )
+
+

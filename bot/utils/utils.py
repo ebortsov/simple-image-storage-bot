@@ -12,7 +12,7 @@ def wrapped_in_quotes(filename: str) -> bool:
 # - the filename is not empty
 # - filename consists of valid characters
 def check_filename(filename: str) -> bool:
-    return 0 < len(filename) <= 128 or bool(re.match("^[A-Za-z0-9_]+$", filename))
+    return 0 < len(filename) <= 128 and bool(re.match("^[A-Za-z0-9_]+$", filename))
 
 
 def get_project_root():
