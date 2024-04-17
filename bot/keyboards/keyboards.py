@@ -25,3 +25,15 @@ def get_upload_keyboard() -> ReplyKeyboardMarkup:
         input_field_placeholder='Enter the name of the photo',
         one_time_keyboard=True
     )
+
+
+# This keyboard is shown, when user prompts to enter the name of the photo they want to delete
+def get_delete_keyboard() -> ReplyKeyboardMarkup:
+    builder = keyboard.ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text='Cancel deletion'))
+    builder.adjust(1)
+    return builder.as_markup(
+        resize_keyboard=True,
+        input_field_placeholder='Enter the name of the photo',
+        one_time_keyboard=True
+    )

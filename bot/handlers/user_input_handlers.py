@@ -22,16 +22,15 @@ router = Router()
 saved_photonames = dict()
 
 
-# Handle name input for photo upload
+# Handle name input for photo uploading
 @router.message(
-    lambda message: states.user_states[message.from_user.id]
-                    == states.States.UPLOAD_NAME_ENTERING
+    lambda message: message.text and
+    states.user_states[message.from_user.id] == states.States.UPLOAD_NAME_ENTERING
 )
 async def upload_name_enter(message: types.Message):
     user_id = message.from_user.id
     # Check that filename is wrapped in double quotes. Like "AwesomeFilename"
-    logging.debug(message.text)
-    if len(message.text) <= 2 or not message.text.startswith('"') or not message.text.endswith('"'):
+    if not utils.wrapped_in_quotes(message.text):
         await message.answer(
             'Wrap your photo name in two double quotes!\n'
             'Like that: {}'.format(html.italic('"AwesomeFilename"')),
@@ -39,24 +38,14 @@ async def upload_name_enter(message: types.Message):
         return
 
     photoname = message.text[1:-1]
-    # Check that the filename consists only of allowed symbols
+    # Check that the filename
     if not utils.check_filename(photoname):
         await message.answer(
-            "Photo name contains invalid symbols!",
-        )
-        return
-
-    # Check the length of the filename
-    if len(photoname) >= 128:
-        await message.answer(
-            f"The length of photo name should be {html.bold('less')} than 128 characters!",
-        )
-        return
-
-    # Check that the filename is unique
-    if photoname in db.get_all_photo_names(user_id):
-        await message.answer(
-            'The photo with given name already exists!',
+            "Something is wrong with your filename. "
+            "Please, check that your photo name satisfy these conditions:\n"
+            "• The length does not exceed 128 characters\n"
+            "• The filename is not empty\n"
+            "• Contains only latin letters, arabic digits and underscore symbols ('_')\n"
         )
         return
 
@@ -67,16 +56,21 @@ async def upload_name_enter(message: types.Message):
     )
 
 
+# user uploads photo
 @router.message(
     F.photo,
     lambda message: states.user_states[message.from_user.id] == states.States.UPLOAD_PHOTO_LOADING
 )
 async def upload_photo(message: types.Message, bot: Bot):
     try:
+        # accept the photo as BytesIO and pass it to the corresponding function
         image = await bot.download(message.photo[-1].file_id)
         user_id = message.from_user.id
         db.save_photo(image, saved_photonames[user_id], user_id)
+
+        # change the state
         states.user_states[user_id] = states.States.MAIN
+        # and return to the original keyboard
         await message.answer(
             "You photo has been successfully saved!",
             reply_markup=keyboards.get_root_keyboard()
