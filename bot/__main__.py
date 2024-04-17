@@ -6,7 +6,7 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from bot.handlers import basic_commands
 from bot.handlers import keyboard_handlers
-
+from bot.handlers import user_input_handlers
 
 async def main():
     # Set up level for logger
@@ -22,6 +22,7 @@ async def main():
 
     dp.include_router(basic_commands.router)
     dp.include_router(keyboard_handlers.router)
+    dp.include_router(user_input_handlers.router)
 
     # Drop all pending messages
     await bot.delete_webhook(drop_pending_updates=True)

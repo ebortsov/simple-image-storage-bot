@@ -15,10 +15,10 @@ router = Router()
 async def start_cmd(message: types.Message):
     user_id = message.from_user.id
     states.user_states[user_id] = states.States.MAIN
-    # db.start_stuff(user_id)
+    db.start_stuff(user_id)
 
     await message.answer(
-        html.bold("Welcome to my image saver bot!") +
+        html.bold("Welcome to my image saver bot!\n") +
         "With this bot you can:\n"
         "- Manage your photos\n"
         "- View your photos\n"

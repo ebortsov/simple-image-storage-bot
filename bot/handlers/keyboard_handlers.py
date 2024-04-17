@@ -14,17 +14,17 @@ router = Router()
 
 @router.message(
     lambda message: message.text == 'Upload' and
-    states.user_states[message.from_user.id] == states.States.MAIN
+                    states.user_states[int(message.from_user.id)] == states.States.MAIN
 )
 async def upload(message: types.Message):
     user_id = message.from_user.id
     states.user_states[user_id] = states.States.UPLOAD_NAME_ENTERING
     await message.answer(
         text='Cool! Now enter the name of the photo want to upload.\n'
-             f'Format: ["{html.italic("name-of-photo")}"]\n'
+             f'Format: "{html.italic("name-of-photo")}"\n'
              f'For example, if you photo is {html.italic("FunnyWaffle_2009.png")} '
-             f'then enter "FunnyWaffle_2009"',
-        reply_markup=keyboards.get_upload_name_enter_keyboard()
+             'then enter {}'.format(html.italic('"FunnyWaffle_2009"')),
+        reply_markup=keyboards.get_upload_keyboard()
     )
 
 

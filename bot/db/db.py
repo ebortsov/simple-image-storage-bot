@@ -1,7 +1,9 @@
 from pathlib import Path
 from bot.utils import utils
 import dotenv
-# TODO: store everything in the database
+import io
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 config = dotenv.dotenv_values()
 images = utils.get_project_root().joinpath(config['IMAGES_FOLDER_NAME'])
@@ -15,6 +17,19 @@ def start_stuff(user_id: int):
 
 def get_all_photo_names(user_id: int):
     user_folder = images.joinpath(str(user_id))
-    return [file for file in user_folder.iterdir() if file.is_file()]
+    return [file.stem for file in user_folder.iterdir() if file.is_file()]
+
+
+def save_photo(photo: io.BytesIO, image_name: str, user_id: int) -> bool:
+    try:
+        user_folder = images.joinpath(str(user_id))
+        with open(user_folder.joinpath(image_name + '.jpg'), mode='wb') as file:
+            file.write(photo.read())
+    except Exception as e:
+        logging.debug(e)
+        raise e
+    else:
+        return True
+
 
 
