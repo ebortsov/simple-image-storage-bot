@@ -10,7 +10,6 @@ images = utils.get_project_root().joinpath(config['IMAGES_FOLDER_NAME'])
 
 # TODO: save file-ids, to decrease the load on Telegram Servers
 
-
 def start_stuff(user_id: int):
     #  Does some preliminary stuff, like creating the folder for the user
     user_folder = images.joinpath(str(user_id))
@@ -18,20 +17,36 @@ def start_stuff(user_id: int):
 
 
 def get_all_photo_names(user_id: int):
-    user_folder = images.joinpath(str(user_id))
-    return [file.stem for file in user_folder.iterdir() if file.is_file()]
-
-
-def save_photo(photo: io.BytesIO, image_name: str, user_id: int) -> bool:
     try:
         user_folder = images.joinpath(str(user_id))
-        with open(user_folder.joinpath(image_name + '.jpg'), mode='wb') as file:
+        return (file.stem for file in user_folder.iterdir() if file.is_file())
+    except Exception as e:
+        # For some reason could not get access to user folder
+        logging.critical(e)
+        raise e
+
+
+def save_photo(photo: io.BytesIO, photoname: str, user_id: int) -> None:
+    try:
+        user_folder = images.joinpath(str(user_id))
+        with open(user_folder.joinpath(photoname + '.jpg'), mode='wb') as file:
             file.write(photo.read())
     except Exception as e:
-        logging.debug(e)
+        logging.error(e)
         raise e
-    else:
-        return True
+
+
+def delete_photo(photoname: str, user_id: int) -> None:
+    try:
+        path_to_photo = images.joinpath(str(user_id)).joinpath(photoname + '.jpg')
+        path_to_photo.unlink()
+    except Exception as e:
+        logging.error(e)
+        raise e
+
+
+def is_present(photoname: str, user_id: int) -> bool:
+    return photoname in get_all_photo_names(user_id)
 
 
 

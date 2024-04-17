@@ -12,6 +12,7 @@ from bot.db import db
 import logging
 from bot.keyboards import keyboards
 from aiogram import F
+import asyncio
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -48,6 +49,10 @@ async def upload_name_enter(message: types.Message):
         )
         return
 
+    if db.is_present(photoname, user_id):
+        await message.answer("Photo with passed already exists!")
+        return
+
     saved_photonames[user_id] = photoname
     states.user_states[user_id] = states.States.UPLOAD_PHOTO_LOADING
     await message.answer(
@@ -62,25 +67,26 @@ async def upload_name_enter(message: types.Message):
 )
 async def upload_photo(message: types.Message, bot: Bot):
     user_id = message.from_user.id
-
-    # The additional check is added to prevent strange behavior when user sends group of photos
-    if states.user_states[user_id] != states.States.UPLOAD_PHOTO_LOADING:
-        return
-
     try:
+        # The additional check is added to prevent strange behavior when user sends group of photos
+        if states.user_states[user_id] != states.States.UPLOAD_PHOTO_LOADING:
+            return
+
+        # change the state in the beginning to prevent other handlers call
+        states.user_states[user_id] = states.States.MAIN
+
         # accept the photo as BytesIO and pass it to the corresponding function
         image = await bot.download(message.photo[-1].file_id)
         db.save_photo(image, saved_photonames[user_id], user_id)
 
-        # change the state
-        states.user_states[user_id] = states.States.MAIN
         # and return to the original keyboard
         await message.answer(
             "You photo has been successfully saved!",
             reply_markup=keyboards.get_root_keyboard()
         )
     except Exception as e:
-        logging.debug(e)
+        logging.error(e)
+        states.user_states[user_id] = states.States.UPLOAD_PHOTO_LOADING
         await message.answer(
             "Oops, something went wrong while uploading photo",
         )
@@ -92,31 +98,44 @@ async def upload_photo(message: types.Message, bot: Bot):
     states.user_states[message.from_user.id] == states.States.DELETE_PHOTO
 )
 async def upload_name_enter(message: types.Message):
-    user_id = message.from_user.id
-    # Check that filename is wrapped in double quotes. Like "AwesomeFilename"
-    if not utils.wrapped_in_quotes(message.text):
-        await message.answer(
-            'Wrap your photo name in two double quotes!\n'
-            'Like that: {}'.format(html.italic('"AwesomeFilename"')),
-        )
-        return
+    try:
+        user_id = message.from_user.id
+        # Check that the filename is wrapped in double quotes. Like "AwesomeFilename"
+        if not utils.wrapped_in_quotes(message.text):
+            await message.answer(
+                'Wrap your photo name in two double quotes!\n'
+                'Like that: {}'.format(html.italic('"AwesomeFilename"')),
+            )
+            return
 
-    photoname = message.text[1:-1]
-    logging.debug(photoname)
-    # Check that the filename satisfies all format conditions
-    if not utils.check_filename(photoname):
-        await message.answer(
-            "You, probably, made a typo in your photo name. "
-            "Please, check that your photo name satisfy these conditions:\n"
-            "• The length does not exceed 128 characters\n"
-            "• The filename is not empty\n"
-            "• Contains only latin letters, arabic digits and underscore symbols ('_')\n"
-        )
-        return
+        photoname = message.text[1:-1]
+        logging.debug(photoname)
 
-    saved_photonames[user_id] = photoname
-    states.user_states[user_id] = states.States.UPLOAD_PHOTO_LOADING
-    # add deletion somewhere here
-    await message.answer(
-        f"The photo {html.italic(photoname)} has been successfully deleted!",
-    )
+        # Check that the filename satisfies all format conditions
+        if not utils.check_filename(photoname):
+            await message.answer(
+                "You, probably, made a typo in your photo name. "
+                "Please, check that your photo name satisfy these conditions:\n"
+                "• The length does not exceed 128 characters\n"
+                "• The filename is not empty\n"
+                "• Contains only latin letters, arabic digits and underscore symbols ('_')\n"
+            )
+            return
+
+        # Check that the photo with passed name exists
+        if not db.is_present(photoname, user_id):
+            await message.answer("Photo with passed does not exist!")
+            return
+
+        db.delete_photo(photoname, user_id)
+
+        # Drop the state, return to the original keyboard
+        states.user_states[user_id] = states.States.MAIN
+        await message.answer(
+            f"The photo {html.italic(photoname)} has been successfully deleted!",
+            reply_markup=keyboards.get_root_keyboard()
+        )
+    except Exception as e:
+        logging.error(e)
+        await message.answer("Oops, something went wrong")
+

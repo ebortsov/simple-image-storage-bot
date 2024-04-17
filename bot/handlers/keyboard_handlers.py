@@ -69,3 +69,5 @@ async def delete(message: types.Message):
         text='Alright, the photo deletion has been cancelled',
         reply_markup=keyboards.get_root_keyboard()
     )
+
+
