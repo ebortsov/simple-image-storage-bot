@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from collections import defaultdict
 
+
 # Class wrapper around dict, so I can add some additional features later
 class UserStates:
 
@@ -25,6 +26,8 @@ class States(Enum):
     UPLOAD_NAME_ENTERING = auto(),
     UPLOAD_PHOTO_LOADING = auto(),
     DELETE_PHOTO = auto()
+    SHOW = auto(),
+    SHOW_PHOTO = auto()
 
 
 user_states = UserStates(states_enum=States, default_state=States.MAIN)

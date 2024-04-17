@@ -12,7 +12,7 @@ from bot.db import db
 import logging
 from bot.keyboards import keyboards
 from aiogram import F
-import asyncio
+from datetime import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,20 +22,14 @@ router = Router()
 saved_photonames = dict()
 
 
-# Handle name input for photo uploading
-@router.message(
-    lambda message: message.text and
-    states.user_states[message.from_user.id] == states.States.UPLOAD_NAME_ENTERING
-)
-async def upload_name_enter(message: types.Message):
-    user_id = message.from_user.id
+async def photoname_check(message: types.Message) -> bool:
     # Check that filename is wrapped in double quotes. Like "AwesomeFilename"
     if not utils.wrapped_in_quotes(message.text):
         await message.answer(
             'Wrap your photo name in two double quotes!\n'
             'Like that: {}'.format(html.italic('"AwesomeFilename"')),
         )
-        return
+        return False
 
     photoname = message.text[1:-1]
     # Check that the filename
@@ -47,8 +41,23 @@ async def upload_name_enter(message: types.Message):
             "• The filename is not empty\n"
             "• Contains only latin letters, arabic digits and underscore symbols ('_')\n"
         )
+        return False
+    return True
+
+
+# Handle name input for photo uploading
+@router.message(
+    lambda message: message.text and
+    states.user_states[message.from_user.id] == states.States.UPLOAD_NAME_ENTERING
+)
+async def upload_name_enter(message: types.Message):
+    user_id = message.from_user.id
+    # Check that filename is wrapped in double quotes. Like "AwesomeFilename"
+    if not await photoname_check(message):
         return
 
+    photoname = message.text[1:-1]
+    logging.debug(photoname)
     if db.is_present(photoname, user_id):
         await message.answer("Photo with passed already exists!")
         return
@@ -97,34 +106,16 @@ async def upload_photo(message: types.Message, bot: Bot):
     lambda message: message.text and
     states.user_states[message.from_user.id] == states.States.DELETE_PHOTO
 )
-async def upload_name_enter(message: types.Message):
+async def delete_name_enter(message: types.Message):
     try:
         user_id = message.from_user.id
-        # Check that the filename is wrapped in double quotes. Like "AwesomeFilename"
-        if not utils.wrapped_in_quotes(message.text):
-            await message.answer(
-                'Wrap your photo name in two double quotes!\n'
-                'Like that: {}'.format(html.italic('"AwesomeFilename"')),
-            )
+        if not await photoname_check(message):
             return
 
         photoname = message.text[1:-1]
-        logging.debug(photoname)
-
-        # Check that the filename satisfies all format conditions
-        if not utils.check_filename(photoname):
-            await message.answer(
-                "You, probably, made a typo in your photo name. "
-                "Please, check that your photo name satisfy these conditions:\n"
-                "• The length does not exceed 128 characters\n"
-                "• The filename is not empty\n"
-                "• Contains only latin letters, arabic digits and underscore symbols ('_')\n"
-            )
-            return
-
         # Check that the photo with passed name exists
         if not db.is_present(photoname, user_id):
-            await message.answer("Photo with passed does not exist!")
+            await message.answer("Photo with passed name does not exist!")
             return
 
         db.delete_photo(photoname, user_id)
@@ -139,3 +130,34 @@ async def upload_name_enter(message: types.Message):
         logging.error(e)
         await message.answer("Oops, something went wrong")
 
+
+# Handle input of the photo name to show the photo
+@router.message(
+    lambda message: message.text and
+    states.user_states[message.from_user.id] == states.States.SHOW_PHOTO
+)
+async def show_photo(message: types.Message):
+    try:
+        user_id = message.from_user.id
+        if not await photoname_check(message):
+            return
+
+        photoname = message.text[1:-1]
+        logging.debug(photoname)
+
+        # Check that the photo with passed name exists
+        if not db.is_present(photoname, user_id):
+            await message.answer("Photo with passed name does not exist!")
+            return
+
+        path_to_photo = db.get_photo_as_pathlike(photoname, user_id)
+        await message.answer_photo(
+            photo=types.FSInputFile(path_to_photo),
+            caption=f"{html.bold('Name: ')}"
+                    f"{html.quote(path_to_photo.name)} "
+                    f"{html.bold('Time of creation: ')}" +
+                    datetime.fromtimestamp(path_to_photo.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+        )
+    except Exception as e:
+        logging.error(e)
+        await message.answer("Oops, something went wrong")

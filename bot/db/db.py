@@ -10,16 +10,17 @@ images = utils.get_project_root().joinpath(config['IMAGES_FOLDER_NAME'])
 
 # TODO: save file-ids, to decrease the load on Telegram Servers
 
+
 def start_stuff(user_id: int):
     #  Does some preliminary stuff, like creating the folder for the user
     user_folder = images.joinpath(str(user_id))
     user_folder.mkdir(exist_ok=True)
 
 
-def get_all_photo_names(user_id: int):
+def get_paths_to_all_photos(user_id: int):
     try:
         user_folder = images.joinpath(str(user_id))
-        return (file.stem for file in user_folder.iterdir() if file.is_file())
+        return (file for file in user_folder.iterdir() if file.is_file())
     except Exception as e:
         # For some reason could not get access to user folder
         logging.critical(e)
@@ -46,7 +47,39 @@ def delete_photo(photoname: str, user_id: int) -> None:
 
 
 def is_present(photoname: str, user_id: int) -> bool:
-    return photoname in get_all_photo_names(user_id)
+    logging.debug(photoname)
+    logging.debug(list(photo.stem for photo in get_paths_to_all_photos(user_id)))
+    return photoname in (photo.stem for photo in get_paths_to_all_photos(user_id))
 
 
+# Get photo as io.BytesIO
+def get_photo_as_bytes(photoname: str, user_id: int) -> io.BytesIO:
+    try:
+        path_to_photo = images.joinpath(str(user_id)).joinpath(photoname + '.jpg')
+        photo = io.BytesIO()
+        with open(path_to_photo, mode='rb') as file:
+            photo.write(file.read())
+        return photo
+    except Exception as e:
+        logging.error(e)
+        raise e
 
+
+# Get photo as Pathlike object
+def get_photo_as_pathlike(photoname: str, user_id: int) -> Path:
+    try:
+        path_to_photo = images.joinpath(str(user_id)).joinpath(photoname + '.jpg')
+        return path_to_photo
+    except Exception as e:
+        logging.error(e)
+        raise e
+
+
+# get os.stat() of the photo by its name
+def get_statistics_of_photo(photoname: str, user_id: int):
+    try:
+        path_to_photo = images.joinpath(str(user_id)).joinpath(photoname + '.jpg')
+        return path_to_photo.stat()
+    except Exception as e:
+        logging.error(e)
+        raise e
