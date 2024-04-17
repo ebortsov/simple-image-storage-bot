@@ -1,34 +1,25 @@
 from enum import Enum, auto
 
-# TODO: create some single class for 'text enter' stuff
+
+class UserStates:
+
+    def __init__(self, states_enum: Enum):
+        self.states_enum = states_enum
+        self.states = dict()
+
+    def __getitem__(self, user_id: int) -> Enum:
+        return self.states[user_id]
+
+    def __setitem__(self, user_id: int, value) -> None:
+        if not isinstance(value, self.states_enum):
+            raise ValueError(f"Value must be a member of {self.states_enum.__name__}")
+        self.states[user_id] = value
 
 
-class UploadState(Enum):
-    NOT_STARTED = auto(),
-    ENTERING_NAME = auto(),
-    UPLOADING_PHOTO = auto()
+class States(Enum):
+    MAIN = auto()
+    UPLOAD_NAME_ENTERING = auto(),
+    UPLOAD_PHOTO_LOADING = auto()
 
 
-_users_upload_state = dict()
-
-
-def change_upload_status(user_id: str, upload_state: UploadState) -> None:
-    _users_upload_state[user_id] = upload_state
-
-
-class DeleteState(Enum):
-    NOT_STARTED = auto()
-    ENTERING_NAME = auto(),
-    UPLOADING_PHOTO = auto()
-
-
-_users_delete_state = dict()
-
-
-def change_delete_status(user_id: str, upload_stade: DeleteState) -> None:
-    _users_delete_state[user_id] = upload_stade
-
-
-def drop_states(user_id: str) -> None:
-    change_delete_status(user_id, DeleteState.NOT_STARTED)
-    change_upload_status(user_id, UploadState.NOT_STARTED)
+user_states = UserStates(states_enum=States)
