@@ -7,6 +7,7 @@ from aiogram.enums import ParseMode
 from bot.handlers import basic_commands
 from bot.handlers import keyboard_handlers
 from bot.handlers import user_input_handlers
+from bot.handlers import carousel
 from bot.db import db
 
 
@@ -27,10 +28,12 @@ async def main():
 
     dp.include_router(basic_commands.router)
     dp.include_router(keyboard_handlers.get_router(db_conn))
+    dp.include_router(carousel.get_router(db_conn))
     dp.include_router(user_input_handlers.get_router(db_conn))
 
     # Drop all pending messages
     await bot.delete_webhook(drop_pending_updates=True)
+
     await dp.start_polling(bot)
 
 

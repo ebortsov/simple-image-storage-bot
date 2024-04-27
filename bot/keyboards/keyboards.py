@@ -1,5 +1,6 @@
 from aiogram.utils import keyboard
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from bot.handlers import carousel
 
 
 # Get the initial keyboard. This keyboard is shown to user when he enters /start command
@@ -9,7 +10,7 @@ def get_root_keyboard() -> ReplyKeyboardMarkup:
     builder.add(KeyboardButton(text='Upload'))
     builder.add(KeyboardButton(text='Show...'))
     builder.add(KeyboardButton(text='Delete'))
-    # builder.add(KeyboardButton(text='carousel')) WILL BE ADDED PRETTY SOON!!!
+    builder.add(KeyboardButton(text='Carousel'))
     builder.adjust(2)
     return builder.as_markup(resize_keyboard=True)
 
@@ -56,3 +57,28 @@ def get_show_photo_cancel_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True
     )
 
+
+def get_carousel_keyboard(current_photoname: str, user_id: int) -> InlineKeyboardMarkup:
+    builder = keyboard.InlineKeyboardBuilder()
+    builder.add(
+        InlineKeyboardButton(
+            text='◀️',
+            callback_data=carousel.CarouselCallback(
+                action=-1,
+                current_photoname=current_photoname,
+                user_id=user_id
+            ).pack()
+        )
+    )
+    builder.add(
+        InlineKeyboardButton(
+            text='▶️',
+            callback_data=carousel.CarouselCallback(
+                action=1,
+                current_photoname=current_photoname,
+                user_id=user_id
+            ).pack()
+        )
+    )
+    builder.adjust(2)
+    return builder.as_markup()

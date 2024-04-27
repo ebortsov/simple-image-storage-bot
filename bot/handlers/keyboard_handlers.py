@@ -149,4 +149,29 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
             reply_markup=keyboards.get_show_keyboard()
         )
 
+    @router.message(
+        lambda message: message.text == 'Carousel' and
+        states.user_states[message.from_user.id] == states.States.MAIN
+    )
+    async def show_carousel(message: types.Message):
+        try:
+            user_id = message.from_user.id
+            photonames = db.get_photonames(db_conn, user_id)
+
+            # User hasn't stored any photos
+            if not photonames:
+                await message.answer(text="You haven't stored anything yet!")
+                return
+
+            # Otherwise show first photo and attach inline keyboard
+            photo = db.get_photo(db_conn, photonames[0], user_id)
+            await message.answer_photo(
+                photo=photo['telegram_file_id'],
+                reply_markup=keyboards.get_carousel_keyboard(photo['photoname'], user_id)
+            )
+
+        except Exception as e:
+            logging.error(e)
+            await message.answer("Oops, something went wrong")
+
     return router
