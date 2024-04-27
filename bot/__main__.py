@@ -7,6 +7,8 @@ from aiogram.enums import ParseMode
 from bot.handlers import basic_commands
 from bot.handlers import keyboard_handlers
 from bot.handlers import user_input_handlers
+from bot.db import db
+
 
 async def main():
     # Set up level for logger
@@ -20,9 +22,12 @@ async def main():
     # Allow interactions in private chats only
     dp.message.filter(F.chat.type == "private")
 
+    db_conn = db.get_connection()
+    db.create_table(db_conn)
+
     dp.include_router(basic_commands.router)
-    dp.include_router(keyboard_handlers.router)
-    dp.include_router(user_input_handlers.router)
+    dp.include_router(keyboard_handlers.get_router(db_conn))
+    dp.include_router(user_input_handlers.get_router(db_conn))
 
     # Drop all pending messages
     await bot.delete_webhook(drop_pending_updates=True)

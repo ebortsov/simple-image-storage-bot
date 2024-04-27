@@ -41,7 +41,7 @@ def get_delete_cancel_keyboard() -> ReplyKeyboardMarkup:
 
 def get_show_keyboard() -> ReplyKeyboardMarkup:
     builder = keyboard.ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text='Show stats'))
+    builder.add(KeyboardButton(text='Show photonames'))
     builder.add(KeyboardButton(text='Show photo'))
     builder.add(KeyboardButton(text='Back'))
     builder.adjust(2)
