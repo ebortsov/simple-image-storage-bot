@@ -1,16 +1,11 @@
 # Simple telegram bot for storing images
 
-## Commands:
+Telegram bot, that allow users to store and watch their photos. 
 
-- `/upload` - command for uploading photos
+Used technologies: Python, Aiogram, SQLite3
 
-- `/reset` - command for resetting photo upload. For example, if you picked the wrong
-name, you can type `/reset` and start uploading photo again.
+Examples of bot:
 
-- `/delete <name>` - command for deleting photos
+<img src="https://github.com/ebortsov/simple-image-storage-bot/assets/141621055/fe4cde28-67ee-4616-a675-a328d0ae2073" width="300px">
 
-- `/show_name` - show names of all stored photos
-
-- `/show_photo <name>` - show photo with passed name (if such photo exist)
-
-- `/generate_album` - picks several random photos from the uploaded ones and creates album of picked photos
+<img src="https://github.com/ebortsov/simple-image-storage-bot/assets/141621055/93089527-38dc-4ea7-8c58-105e700a6dcb" width="300px">
