@@ -23,7 +23,7 @@ async def start_cmd(message: types.Message):
         "• Manage your photos\n"
         "• View your photos\n"
         "• Create " + html.bold("amazing") + " carousel | " + html.italic('soon will be available!') + '\n'
-        "And all there operations with nice keyboard and smooth interaction",
+        "And all these operations with nice keyboard and smooth interaction",
         reply_markup=keyboards.get_root_keyboard()
     )
 
