@@ -15,8 +15,6 @@ from aiogram import F
 from datetime import datetime
 import sqlite3
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 def get_router(db_conn: sqlite3.Connection) -> Router:
     router = Router()
@@ -45,7 +43,7 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
                 "Now you can upload your photo",
             )
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             await message.answer("Oops, something went wrong")
 
     # user uploads photo
@@ -72,13 +70,15 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
 
             db.save_photo(db_conn, saved_photonames[user_id], image, user_id, message.photo[-1].file_id)
 
+            logging.info(f"user {user_id} successfully saved image {message.photo[-1].file_id}")
+
             # and return to the original keyboard
             await message.answer(
                 "You photo has been successfully saved!",
                 reply_markup=keyboards.get_root_keyboard()
             )
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             states.user_states[user_id] = states.States.UPLOAD_PHOTO_LOADING
             await message.answer(
                 "Oops, something went wrong while uploading photo",
@@ -102,6 +102,8 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
                 return
 
             db.delete_photo(db_conn, photoname, user_id)
+
+            logging.info(f"user {user_id} deleted photo '{photoname}' (no file_id, sorry)")
 
             # Drop the state, return to the original keyboard
             states.user_states[user_id] = states.States.MAIN
@@ -132,13 +134,15 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
 
             photo_info = db.get_photo(db_conn, photoname, user_id)
 
+            logging.info(f"user {user_id} requested photo {photo_info['telegram_file_id']}")
+
             await message.answer_photo(
                 photo=photo_info['telegram_file_id'],
                 caption=f"{html.bold('Name: ')}"
                         f"{html.quote(photo_info['photoname'])} "
             )
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             await message.answer("Oops, something went wrong")
 
     return router

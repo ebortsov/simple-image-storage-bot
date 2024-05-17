@@ -6,7 +6,6 @@ import logging
 import sqlite3
 from typing import Tuple, List
 
-logging.basicConfig(level=logging.DEBUG)
 
 config = dotenv.dotenv_values()
 database_path = utils.get_project_root().joinpath(config['IMAGES_DB'])

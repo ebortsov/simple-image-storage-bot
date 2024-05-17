@@ -2,6 +2,7 @@ from aiogram import F, Dispatcher, Bot
 import asyncio
 import dotenv
 import logging
+from bot.logging_settings import logger_setup
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from bot.handlers import basic_commands
@@ -12,10 +13,11 @@ from bot.db import db
 
 
 async def main():
-    # Set up level for logger
-    logging.basicConfig(level=logging.INFO)
     # Read some configuration files (like bot token etc.)
     config = dotenv.dotenv_values()
+
+    # Setup logger
+    logger_setup.setup()
 
     dp = Dispatcher()
     bot = Bot(token=config['TOKEN'], default=DefaultBotProperties(parse_mode=ParseMode.HTML))

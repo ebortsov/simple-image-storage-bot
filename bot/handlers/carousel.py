@@ -8,9 +8,8 @@ import logging
 from bot.db import db
 from bot.keyboards import keyboards
 
-logging.basicConfig(level=logging.DEBUG)
 
-
+# The idea that the callback will contain the information about the current photo on the carousel
 class CarouselCallback(CallbackData, prefix='carousel'):
     action: int
     current_photoname: str
@@ -43,6 +42,8 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
                 else photonames[0]
             )
             new_photo = db.get_photo(db_conn, new_photoname, user_id)
+
+            logging.info(f"user {user_id} switched photo on the message {message.message_id}")
 
             # Change photo
             await callback.message.edit_media(

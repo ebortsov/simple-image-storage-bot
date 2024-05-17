@@ -13,8 +13,6 @@ from datetime import datetime
 import sqlite3
 from bot.db import db
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 def get_router(db_conn: sqlite3.Connection) -> Router:
     router = Router()
