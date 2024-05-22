@@ -1,14 +1,12 @@
-from pathlib import Path
-from bot.utils import utils
-import dotenv
 import io
-import logging
 import sqlite3
-from typing import Tuple, List
+from typing import List
 
+from bot.config.config import Config
+from bot.utils import utils
 
-config = dotenv.dotenv_values()
-database_path = utils.get_project_root().joinpath(config['IMAGES_DB'])
+config = Config()
+database_path = utils.get_project_root().joinpath(config.databases.images_database)
 
 
 CREATE_TABLE = """CREATE TABLE IF NOT EXISTS images (
@@ -70,4 +68,3 @@ def get_photonames(
 ) -> List[str]:
     with db_conn:
         return [row['photoname'] for row in db_conn.execute(GET_PHOTONAMES, (telegram_user_id, )).fetchall()]
-

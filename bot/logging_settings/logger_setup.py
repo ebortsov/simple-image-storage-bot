@@ -1,16 +1,18 @@
 import logging
-import dotenv
 from bot.logging_settings import logging_filters
 from bot.utils import utils
-from pathlib import Path
+from bot.config.config import Config
+import sys
 
 
 # I know that for this project such a logging may seem redundant,
 # but I wrote all this just to practice the logging module :D
 def setup():
-    config = dotenv.dotenv_values()
-    errors_log = utils.get_project_root().joinpath(config['IMPORTANT_LOGS'])
-    info_log = utils.get_project_root().joinpath(config['INFO_LOGS'])
+    config = Config()
+    # Error logs contain information about exceptions (errors) and critical errors (i.e. level >= logging.ERROR)
+    errors_log = utils.get_project_root().joinpath(config.logs.important_logs)
+    # Info logs contain information about user's action (e.g. user uploaded photo etc.)
+    info_log = utils.get_project_root().joinpath(config.logs.info_logs)
 
     default_formatter = logging.Formatter(
         fmt='#%(levelname)s [%(asctime)s] %(filename)s:%(lineno)d - %(message)s'
@@ -38,7 +40,7 @@ def setup():
     debug_handler.addFilter(logging_filters.DebugFilter())
 
     # This guy will catch everything
-    default_handler = logging.StreamHandler()
+    default_handler = logging.StreamHandler(sys.stdout)
     default_handler.setFormatter(default_formatter)
     default_handler.setLevel(logging.DEBUG)
 
@@ -50,4 +52,3 @@ def setup():
     root_logger.addHandler(info_handler)
     root_logger.addHandler(debug_handler)
     root_logger.addHandler(default_handler)
-

@@ -29,7 +29,6 @@ def get_router(db_conn: sqlite3.Connection) -> Router:
 
             # User deleted all photos
             if not photonames:
-                print(photonames, user_id)
                 await message.answer(text="You haven't stored anything yet!")
                 return
 
