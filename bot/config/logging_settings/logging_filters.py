@@ -11,9 +11,9 @@ class WarningFilter(logging.Filter):
         return record.levelno == logging.WARNING
 
 
-class InfoNotFromAiogramFilter(logging.Filter):
+class InfoFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        return record.levelno == logging.INFO and record.filename != 'dispatcher.py'
+        return record.levelno == logging.INFO
 
 
 class DebugFilter(logging.Filter):

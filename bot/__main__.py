@@ -1,6 +1,6 @@
 from aiogram import F, Dispatcher, Bot
 import asyncio
-from bot.logging_settings import logger_setup
+from bot.config.logging_settings import logger_setup
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from bot.handlers import basic_commands
@@ -9,6 +9,7 @@ from bot.handlers import user_input_handlers
 from bot.handlers import carousel
 from bot.db import db
 from bot.config.config import Config
+from bot.middlewares.throttling import ThrottlingMiddleware
 
 
 async def main():
@@ -19,17 +20,20 @@ async def main():
 
     dp = Dispatcher()
 
+    # include throttling
+    dp.update.middleware(ThrottlingMiddleware())
+
     # Allow interactions in private chats only
     dp.message.filter(F.chat.type == "private")
 
     db_conn = db.get_connection()
-    # TODO: add to workflow data db_conn (but it'll require changing so many handlers...)
     db.create_table(db_conn)
+    dp.workflow_data.update({'db_conn': db_conn})
 
     dp.include_router(basic_commands.router)
-    dp.include_router(keyboard_handlers.get_router(db_conn))
-    dp.include_router(carousel.get_router(db_conn))
-    dp.include_router(user_input_handlers.get_router(db_conn))
+    dp.include_router(keyboard_handlers.router)
+    dp.include_router(carousel.router)
+    dp.include_router(user_input_handlers.router)
 
     bot = Bot(
         token=config.telegram_bot.bot_token,

@@ -1,13 +1,18 @@
 import logging
-from bot.logging_settings import logging_filters
+from bot.config.logging_settings import logging_filters
 from bot.utils import utils
 from bot.config.config import Config
 import sys
 
 
-# I know that for this project such a logging may seem redundant,
-# but I wrote all this just to practice the logging module :D
+# HOW IT WORKS: All messages that come to the root logger are handled by various handlers
+# DEBUG logs got to stdout
+# INFO logs to separate file
+# WARNING logs go to stderr
+# ERROR and CRITICAL logs go to separate file
+
 def setup():
+    logging.basicConfig(level=logging.INFO)
     config = Config()
     # Error logs contain information about exceptions (errors) and critical errors (i.e. level >= logging.ERROR)
     errors_log = utils.get_project_root().joinpath(config.logs.important_logs)
@@ -32,23 +37,16 @@ def setup():
     # All logs with level INFO go to info_log file
     info_handler = logging.FileHandler(filename=info_log, mode='a', encoding='utf-8')
     info_handler.setFormatter(default_formatter)
-    info_handler.addFilter(logging_filters.InfoNotFromAiogramFilter())
+    info_handler.addFilter(logging_filters.InfoFilter())
 
-    # All DEBUG loggers go to stdout
+    # All DEBUG logs go to stdout
     debug_handler = logging.StreamHandler()
     debug_handler.setFormatter(default_formatter)
     debug_handler.addFilter(logging_filters.DebugFilter())
 
-    # This guy will catch everything
-    default_handler = logging.StreamHandler(sys.stdout)
-    default_handler.setFormatter(default_formatter)
-    default_handler.setLevel(logging.DEBUG)
-
     # Attach handlers to the root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
     root_logger.addHandler(error_handler)
     root_logger.addHandler(warning_handler)
     root_logger.addHandler(info_handler)
     root_logger.addHandler(debug_handler)
-    root_logger.addHandler(default_handler)
